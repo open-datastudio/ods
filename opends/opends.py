@@ -2,7 +2,7 @@ from .spark_cluster import SparkCluster
 from staroid import Staroid
 
 import requests
-import os, stat
+import os, stat, time
 from pathlib import Path
 from shutil import which
 import platform
@@ -16,16 +16,27 @@ CHISEL_ARCH_MAP={
 }
 
 class Opends:
-    def __init__(self, staroid=None, cache_dir=None, chisel_path=None):
+    def __init__(self, staroid=None, ske=None, cache_dir=None, chisel_path=None):
+        self.__tunnel_processes = {}
+        self.__ske = None
+
         if staroid == None:
-            self.__staroid = Staroid()
+            self._staroid = Staroid()
         else:
-            self.__staroid = staroid
+            self._staroid = staroid
 
         if cache_dir == None:
             self.__cache_dir = "{}/.opends".format(str(Path.home()))
         else:        
             self.__cache_dir = cache_dir
+
+        # configure from env var
+        if "STAROID_SKE" in os.environ:
+            self.__ske = os.environ["STAROID_SKE"]
+
+        # configure from args
+        if ske != None:
+            self.__ske = ske
 
         self.__chisel_path = chisel_path
 
@@ -69,20 +80,123 @@ class Opends:
                 # chmod
                 os.chmod(chisel_path, stat.S_IRWXU)
 
-                self.__chisel_path = chisel_path
+            self.__chisel_path = chisel_path
 
+    def _start_instance_on_staroid(self, instance_name, commit_url):
+        cluster = self._staroid.cluster().get(self.__ske)
+        if cluster == None:
+            raise Exception("Can't get ske cluster")
+
+        ns_api = self._staroid.namespace(cluster)
+        ns = ns_api.create(instance_name, commit_url)
+        if ns == None:
+            raise Exception("Can't create instance")
+
+        # if instnace is stopped, restart
+        if ns.status() == "PAUSE":
+            ns_api.start(instance_name)
+
+        # wait for phase to become RUNNING
+        return self.__wait_for_ns_phase(ns_api, ns, "RUNNING", 600)
+
+    def _is_tunnel_running(self, instance_name):
+        if instance_name in self.__tunnel_processes:
+            p = self.__tunnel_processes[instance_name]
+            p.poll()
+            return p.returncode == None
+        else:
+            return False
+
+    def _start_tunnel(self, instance_name, tunnels):
+        if self._is_tunnel_running(instance_name):
+            return
+
+        cluster = self._staroid.cluster().get(self.__ske)
+        if cluster == None:
+            raise Exception("Can't get ske cluster")
+        ns_api = self._staroid.namespace(cluster)
+        ns = ns_api.get(instance_name)
+        ns_api.shell_start(instance_name)
+        resources = ns_api.get_all_resources(instance_name)
+
+        shell_service = None
+        for s in resources["services"]["items"]:
+            if "labels" in s["metadata"]:
+                if "resource.staroid.com/system" in s["metadata"]["labels"]:
+                    if s["metadata"]["labels"]["resource.staroid.com/system"] == "shell":
+                        shell_service = s
+                        break                        
+
+        if shell_service == None:
+            raise Exception("Shell service not found")
+
+        print("name = " + ns.alias())
+        tunnel_server = "https://p{}-{}--{}".format("57682", shell_service["metadata"]["name"], ns.url()[len("https://"):])
+        cmd = [
+            self.__chisel_path,
+            "client",
+            "--header",
+            "Authorization: token {}".format(self._staroid.get_access_token()),
+            "--keepalive",
+            "10s",
+            tunnel_server
+        ]
+        cmd.extend(tunnels)
+        self.__tunnel_processes[instance_name]=subprocess.Popen(cmd)
+
+    def _stop_tunnel(self, instance_name):
+        if self._is_tunnel_running(instance_name):
+            self.__tunnel_processes[instance_name].kill()
+            del self.__tunnel_processes[instance_name]
+
+        cluster = self._staroid.cluster().get(self.__ske)
+        if cluster == None:
+            raise Exception("Can't get ske cluster")
+        ns_api = self._staroid.namespace(cluster)
+        ns_api.shell_stop(instance_name)
+
+    def _stop_instance_on_staroid(self, instance_name):
+        cluster = self._staroid.cluster().get(self.__ske)
+        if cluster == None:
+            raise Exception("Can't get ske cluster")
+        ns_api = self._staroid.namespace(cluster)
+        ns = ns_api.stop(instance_name)
+        ns = self.__wait_for_ns_phase(ns_api, ns, "PAUSED", 600)
+        return ns
+    
+    def _delete_instance_on_staroid(self, instance_name):
+        cluster = self._staroid.cluster().get(self.__ske)
+        if cluster == None:
+            raise Exception("Can't get ske cluster")
+        ns_api = self._staroid.namespace(cluster)
+        ns = ns_api.delete(instance_name)
+        ns = self.__wait_for_ns_phase(ns_api, ns, "REMOVED", 600)
+        
+    def __wait_for_ns_phase(self, ns_api, ns, phase, timeout):
+        start_time = time.time()
+        sleep_time = 1
+        max_sleep_time = 7
+
+        while ns.phase() != phase:
+            if time.time() - start_time > timeout:
+                raise Exception("Timeout")
+
+            # sleep
+            time.sleep(sleep_time)
+            if sleep_time < max_sleep_time:
+                sleep_time += 1
+
+            # check
+            ns = ns_api.get_by_id(ns.id())
+        return ns
 
 __singleton = {}
 
-def init():
-    __singleton["instance"] = Opends()
+def init(ske=None):
+    __singleton["instance"] = Opends(ske=ske)
     return __singleton["instance"]
 
 def spark(name, spark_conf=None, chisel_path=None):
     cluster = SparkCluster(__singleton["instance"], name, spark_conf=spark_conf)
-    cluster.install()
-    cluster.create_cluster()
-    cluster.start_cluster()
-    cluster.open_tunnel()
-    spark = cluster.create_spark_session()
-    return spark
+    return cluster
+

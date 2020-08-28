@@ -41,6 +41,7 @@ setuptools.setup(
     install_requires=[
         'staroid',
         'findspark',
-        'python3-wget'
+        'python3-wget',
+        'kubernetes'
     ]
 )
