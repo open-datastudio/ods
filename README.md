@@ -37,9 +37,11 @@ import pyspark
 spark_conf = pyspark.SparkConf()
 spark = ods.spark(
     cluster_name="",
-    worker_instance_type="standard-4",
-    worker_num="2:2:10", # initial:min:max
-    spark_conf=spark_conf # optional spark conf
+    worker_num=1, # number of spark executor. default 1.
+    worker_type="standard-4", # worker instance type. default 'standard-4'. One of 'standard-2', standard-4', 'standard-8'.
+    spark_conf=spark_conf # optional spark conf dictionary
+    delta=False # install delta lake library
+    aws=False # install aws s3 library
 )
 ```
 

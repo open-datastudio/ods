@@ -34,11 +34,12 @@ class TestSpark(unittest.TestCase):
         # init with ske name
         ods.init(ske=ske)
 
-        spark = ods.spark("test").session()
+        spark = ods.spark("test", delta=True, aws=True).session()
         df = spark.createDataFrame([{"hello": "world"} for x in range(100)])
         self.assertEqual(100, df.count())
 
         # delete cluster instance
+        spark.stop()
         ods.spark("test").delete()
 
         # clean up

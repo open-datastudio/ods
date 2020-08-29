@@ -35,7 +35,11 @@ class SparkCluster:
         spark_conf=None,
         spark_version="3.0.0",
         spark_home=None,
-        worker_num=1
+        worker_num=1,
+        worker_type="standard-4",
+        worker_isolation="dedicated",
+        delta=False,
+        aws=False
     ):
         self.__opends = opends
         self.__cluster_name = cluster_name
@@ -43,6 +47,10 @@ class SparkCluster:
         self.__spark_version = spark_version
         self.__spark_home = spark_home
         self.__worker_num = worker_num
+        self.__worker_type = worker_type
+        self.__worker_isolation = worker_isolation
+        self.__delta = delta
+        self.__aws = aws
 
     def install(self):
         "Install"
@@ -209,7 +217,9 @@ class SparkCluster:
         os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
         from pyspark.sql import SparkSession
-        spark = SparkSession.builder \
+
+        jars_packages = []
+        session_builder = SparkSession.builder \
             .appName(self.__cluster_name) \
             .config("spark.master", "k8s://http://localhost:8001") \
             .config("spark.kubernetes.namespace", ns.namespace()) \
@@ -218,6 +228,69 @@ class SparkCluster:
             .config("spark.driver.bindAddress", "0.0.0.0") \
             .config("spark.driver.port", 22321) \
             .config("spark.blockManager.port", 22322) \
-            .config("spark.executor.instances", self.__worker_num) \
-            .getOrCreate()
+            .config("spark.scheduler.mode", "FAIR") \
+            .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
+            .config("spark.dynamicAllocation.enabled ", True) \
+            .config("spark.dynamicAllocation.minExecutors", 1) \
+            .config("spark.dynamicAllocation.maxExecutors", 100) \
+            .config("spark.dynamicAllocation.executorIdleTimeout", "600s") \
+            .config("spark.dynamicAllocation.schedulerBacklogTimeout", "60s") \
+            .config("spark.kubernetes.allocation.batch.size ", 20) \
+            .config("spark.dynamicAllocation.initialExecutors", self.__worker_num) \
+            .config("spark.executor.instances", self.__worker_num)
+
+        if self.__spark_version.startswith("3."):
+            session_builder = session_builder.config("spark.dynamicAllocation.shuffleTracking.enabled", True) \
+                .config("spark.sql.adaptive.enabled", True) \
+                .config("spark.sql.adaptive.coalescePartitions.enabled", True)
+
+            if self.__delta:
+                session_builder = session_builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
+                    .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+                jars_packages.append("io.delta:delta-core_2.12:0.7.0")
+
+            if self.__aws:
+                # for s3 access
+                jars_packages.append("com.amazonaws:aws-java-sdk-pom:1.11.814")
+                jars_packages.append("org.apache.hadoop:hadoop-aws:2.7.7")
+
+        executor_conf = self._gen_executor_conf(self.__worker_type, self.__worker_num, self.__worker_isolation)
+        for k, v in executor_conf.items():
+            session_builder = session_builder.config(k, v)
+
+        if self.__spark_conf != None:
+            for k, v in self.__spark_conf.items():
+                if k == "spark.jars.packages":
+                    jars_packages.append(v)
+                else:
+                    session_builder = session_builder.config(k, v)
+
+        if len(jars_packages) > 0:
+            session_builder = session_builder.config("spark.jars.packages", ",".join(jars_packages))
+
+        spark = session_builder.getOrCreate()
         return spark
+
+    def _gen_executor_conf(self, worker_type, worker_num, worker_isolation):
+        cores = 1
+        memory = "4g"
+
+        if worker_type == "standard-2":
+            cores = 2
+            memory = "8g"
+        elif worker_type == "standard-4":
+            cores = 4
+            memory = "16g"
+        elif worker_type == "standard-8":
+            cores = 8
+            memory = "32g"
+
+        conf = {
+            "spark.executor.cores": cores,
+            "spark.executor.memory": memory,
+            "spark.kubernetes.executor.limit.cores": cores,
+            "spark.kubernetes.executor.label.pod.staroid.com/disk": "ssd",
+            "spark.kubernetes.executor.label.pod.staroid.com/instance-type": worker_type,
+            "spark.kubernetes.executor.label.pod.staroid.com/isolation": worker_isolation
+        }
+        return conf
