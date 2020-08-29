@@ -5,14 +5,14 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="ods",
-    version="0.0.1",
+    version="0.0.2",
     license='MIT',
     author="Open Data Studio",
     author_email="moon@staroid.com",
     description="Python client library for Staroid cloud platform",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/open-datastudio/opends",
+    url="https://github.com/open-datastudio/ods",
     packages=setuptools.find_packages(),
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
