@@ -1,0 +1,4 @@
+staroid
+findspark
+python3-wget
+kubernetes
