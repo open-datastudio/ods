@@ -14,53 +14,37 @@ pip install ods
 ```
 
 
-## Usage
+## Quick start
 
-### Initialization
+### Configuration
+
+1. [Configure staroid](https://github.com/staroids/staroid-python#configuration)
+2. Login staroid.com and create a SKE (Star Kubernetes engine) cluster.
 
 ```python
 import ods
-
-# in cluster initialization. (or from ~/.ods/config)
-ods.init()
-
-# initialization with staroid access token
-ods.init(staroid_access_token="", staroid_org_name="", staroid_cluster_name="", )
+ods.init(ske="kube-cluster-1") # ske is a name of kubernetes cluster
 ```
 
 ### Get Spark cluster
 
 ```python
-from pyspark.sql import SparkSession
-import pyspark
+spark = ods.spark("spark-1", worker_num=3).session() # create spark session with 3 initial worker nodes
 
-spark_conf = pyspark.SparkConf()
-spark = ods.spark(
-    cluster_name="",
-    worker_num=1, # number of spark executor. default 1.
-    worker_type="standard-4", # worker instance type. default 'standard-4'. One of 'standard-2', standard-4', 'standard-8'.
-    spark_conf=spark_conf # optional spark conf dictionary
-    delta=False # install delta lake library
-    aws=False # install aws s3 library
-)
+df = spark.createDataFrame(....)
 ```
 
-### Get Dask cluster (planned)
+### Get Dask cluster (Coming soon)
 
 ```python
-cluster = ods.dask(
-    cluster_name="",
-    worker_num=10
-)
+cluster = ods.dask("dask-1", worker_num=10)
 
 from dask.distributed import Client
 client = Client(cluster)
 ```
 
-### Get Ray cluster (planned)
+### Get Ray cluster (Coming soon)
 
 ```python
-ods.ray(
-    cluster_name=""
-)
+ods.ray(cluster_name="")
 ```
