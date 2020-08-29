@@ -10,7 +10,7 @@
 ## Install
 
 ```
-pip install opends
+pip install ods
 ```
 
 
@@ -19,13 +19,13 @@ pip install opends
 ### Initialization
 
 ```python
-import opends
+import ods
 
-# in cluster initialization. (or from ~/.opends/config)
-opends.init()
+# in cluster initialization. (or from ~/.ods/config)
+ods.init()
 
 # initialization with staroid access token
-opends.init(staroid_access_token="", staroid_org_name="", staroid_cluster_name="", )
+ods.init(staroid_access_token="", staroid_org_name="", staroid_cluster_name="", )
 ```
 
 ### Get Spark cluster
@@ -35,7 +35,7 @@ from pyspark.sql import SparkSession
 import pyspark
 
 spark_conf = pyspark.SparkConf()
-spark = opends.spark(
+spark = ods.spark(
     cluster_name="",
     worker_instance_type="standard-4",
     worker_num="2:2:10", # initial:min:max
@@ -43,10 +43,10 @@ spark = opends.spark(
 )
 ```
 
-### Get Dask cluster
+### Get Dask cluster (planned)
 
 ```python
-cluster = opends.dask(
+cluster = ods.dask(
     cluster_name="",
     worker_num=10
 )
@@ -55,22 +55,10 @@ from dask.distributed import Client
 client = Client(cluster)
 ```
 
-### Get Ray cluster
+### Get Ray cluster (planned)
 
 ```python
-opends.ray(
+ods.ray(
     cluster_name=""
 )
 ```
-
-
-## Design consideration
-
-- Should ray, daks, pyspark be a dependency package or not?
-- Standard python Convention
-- Pluggable code structure
-  - New cluster framework
-  - New cloud infrastructure
-- Support multiple python versions (3.6, 3.7, 3.8)
-- How to print ui URL (spark-ui, dask-ui, ...)
-- Unittest

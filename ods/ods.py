@@ -16,7 +16,7 @@ CHISEL_ARCH_MAP={
     "i386": "386"
 }
 
-class Opends:
+class Ods:
     def __init__(self, staroid=None, ske=None, cache_dir=None, chisel_path=None):
         self.__tunnel_processes = {}
         self.__ske = None
@@ -27,7 +27,7 @@ class Opends:
             self._staroid = staroid
 
         if cache_dir == None:
-            self.__cache_dir = "{}/.opends".format(str(Path.home()))
+            self.__cache_dir = "{}/.ods".format(str(Path.home()))
         else:        
             self.__cache_dir = cache_dir
 
@@ -205,7 +205,7 @@ class Opends:
 __singleton = {}
 
 def init(ske=None):
-    __singleton["instance"] = Opends(ske=ske)
+    __singleton["instance"] = Ods(ske=ske)
     return __singleton["instance"]
 
 def spark(name, spark_conf=None, chisel_path=None):

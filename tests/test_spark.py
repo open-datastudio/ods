@@ -1,7 +1,7 @@
 import unittest
 import tempfile
 
-import opends
+import ods
 from staroid import Staroid
 import os, time
 
@@ -12,8 +12,8 @@ TEST_REGION="aws us-west2"
 
 class TestSpark(unittest.TestCase):
     def test_install(self):
-        opends.init()
-        spark = opends.spark("test")
+        ods.init()
+        spark = ods.spark("test")
 
         # install without exception
         spark.install()
@@ -32,14 +32,14 @@ class TestSpark(unittest.TestCase):
         Staroid().cluster().create(ske, TEST_REGION)
 
         # init with ske name
-        opends.init(ske=ske)
+        ods.init(ske=ske)
 
-        spark = opends.spark("test").session()
+        spark = ods.spark("test").session()
         df = spark.createDataFrame([{"hello": "world"} for x in range(100)])
         self.assertEqual(100, df.count())
 
         # delete cluster instance
-        opends.spark("test").delete()
+        ods.spark("test").delete()
 
         # clean up
         Staroid().cluster().delete(ske)
