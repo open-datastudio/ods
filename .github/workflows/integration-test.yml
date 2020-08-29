@@ -1,0 +1,32 @@
+name: Integration test
+
+on:
+  push:
+    tags-ignore:
+      - '*.*'
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+    steps:
+    - name: Checkout latest code
+      uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        make init
+    - name: Test
+      run: |
+        make test
+      env:
+        STAROID_ACCESS_TOKEN: ${{ secrets.staroid_access_token }}
+        STAROID_ACCOUNT: ${{ secrets.staroid_account }}
