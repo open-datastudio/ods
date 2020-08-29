@@ -8,6 +8,7 @@ from shutil import which
 import platform
 import subprocess
 import wget
+import atexit
 
 CHISEL_VERSION="1.6.0"
 CHISEL_ARCH_MAP={
@@ -130,7 +131,6 @@ class Opends:
         if shell_service == None:
             raise Exception("Shell service not found")
 
-        print("name = " + ns.alias())
         tunnel_server = "https://p{}-{}--{}".format("57682", shell_service["metadata"]["name"], ns.url()[len("https://"):])
         cmd = [
             self.__chisel_path,
@@ -143,6 +143,18 @@ class Opends:
         ]
         cmd.extend(tunnels)
         self.__tunnel_processes[instance_name]=subprocess.Popen(cmd)
+        atexit.register(self.cleanup)
+
+    def cleanup(self):
+        timeout_sec = 5
+        for p in self.__tunnel_processes.values(): # list of your processes
+            p_sec = 0
+            for second in range(timeout_sec):
+                if p.poll() == None:
+                    time.sleep(1)
+                    p_sec += 1
+            if p_sec >= timeout_sec:
+                p.kill() # supported from python 2.6
 
     def _stop_tunnel(self, instance_name):
         if self._is_tunnel_running(instance_name):
