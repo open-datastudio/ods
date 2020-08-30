@@ -208,7 +208,6 @@ def init(ske=None):
     __singleton["instance"] = Ods(ske=ske)
     return __singleton["instance"]
 
-def spark(name, spark_conf=None, chisel_path=None, worker_num=1, worker_type="standard-4", worker_isolation="dedicated", delta=False, aws=False):
+def spark(name, spark_conf=None, chisel_path=None, worker_num=1, worker_type="standard-4", worker_isolation="dedicated", delta=False, aws=True):
     cluster = SparkCluster(__singleton["instance"], name, spark_conf=spark_conf, worker_num=worker_num, worker_type=worker_type, worker_isolation=worker_isolation, delta=delta, aws=aws)
     return cluster
-
