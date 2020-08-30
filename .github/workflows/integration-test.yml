@@ -30,3 +30,6 @@ jobs:
       env:
         STAROID_ACCESS_TOKEN: ${{ secrets.staroid_access_token }}
         STAROID_ACCOUNT: ${{ secrets.staroid_account }}
+        S3_LOCATION: ${{ secrets.s3_location }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}

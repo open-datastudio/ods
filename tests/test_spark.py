@@ -6,7 +6,9 @@ from staroid import Staroid
 import os, time
 
 def integration_test_ready():
-    return "STAROID_ACCESS_TOKEN" in os.environ and "STAROID_ACCOUNT" in os.environ
+    return "STAROID_ACCESS_TOKEN" in os.environ \
+        and "STAROID_ACCOUNT" in os.environ \
+        and "S3_LOCATION" in os.environ
 
 TEST_REGION="aws us-west2"
 
@@ -34,9 +36,16 @@ class TestSpark(unittest.TestCase):
         # init with ske name
         ods.init(ske=ske)
 
-        spark = ods.spark("test", delta=True, aws=True).session()
+        spark = ods.spark("test", delta=True).session()
         df = spark.createDataFrame([{"hello": "world"} for x in range(100)])
         self.assertEqual(100, df.count())
+
+        # delta
+        s3_delta_table="{}/delta-table".format(os.environ["S3_LOCATION"])
+        spark.range(0, 5).write.format("delta").mode("overwrite").save(s3_delta_table)
+
+        delta = spark.read.format("delta").load(s3_delta_table)
+        self.assertEqual(5, delta.count())
 
         # delete cluster instance
         spark.stop()
@@ -44,4 +53,3 @@ class TestSpark(unittest.TestCase):
 
         # clean up
         Staroid().cluster().delete(ske)
-

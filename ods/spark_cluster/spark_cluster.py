@@ -9,10 +9,13 @@ from kubernetes import client
 
 SPARK_ARTIFACTS={
     "3.0.0": {
-        "image": "opendatastudio/spark-py:v3.0.1-snapshot-20200828-01",
-        #"image": "opendatastudio/spark-py:v3.0.0-staroid",
-        "dist": "https://downloads.apache.org/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz",
-        "commit_url": "GITHUB/open-datastudio/spark-serverless:master"
+        "image": "opendatastudio/spark-py:v3.0.0-staroid-20200830-01",
+        "dist": "https://downloads.apache.org/spark/spark-3.0.0/spark-3.0.0-bin-hadoop3.2.tgz",
+        "commit_url": "GITHUB/open-datastudio/spark-serverless:master",
+        "jars": {
+            "hadoop-aws": "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.2.0/hadoop-aws-3.2.0.jar",
+            "aws-java-sdk": "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.563/aws-java-sdk-bundle-1.11.563.jar"
+        }
     },
     "2.4.6": {
         "image": "opendatastudio/spark-py:v2.4.6-staroid",
@@ -39,7 +42,7 @@ class SparkCluster:
         worker_type="standard-4",
         worker_isolation="dedicated",
         delta=False,
-        aws=False
+        aws=True
     ):
         self.__opends = opends
         self.__cluster_name = cluster_name
@@ -72,12 +75,24 @@ class SparkCluster:
 
                 # remove dist file after extract
                 subprocess.run(["rm", "-f", "{}/{}".format(cache_dir, os.path.basename(SPARK_ARTIFACTS[self.__spark_version]["dist"]))])
-            
+
             self.__spark_home = spark_home
+
+        # download additional jars
+        if self.__aws:
+            self.__download_jar("{}/jars".format(self.__spark_home), SPARK_ARTIFACTS[self.__spark_version]["jars"]["hadoop-aws"])
+            self.__download_jar("{}/jars".format(self.__spark_home), SPARK_ARTIFACTS[self.__spark_version]["jars"]["aws-java-sdk"])
 
         import findspark
         findspark.init(self.__spark_home)
         return self
+
+    def __download_jar(self, download_dir, url):
+        "download file to download_dir if not exists"
+
+        filename = os.path.basename(url)
+        if not os.path.exists("{}/{}".format(download_dir, filename)):
+            wget.download(url, download_dir)
 
     def start(self):
         "Start cluster"
@@ -198,6 +213,9 @@ class SparkCluster:
         self.stop()
         self.__opends._delete_instance_on_staroid(self.__cluster_name)
 
+    def __spark_major_version(self):
+        return int(self.__spark_version[:1])
+
     def session(self):
         "Get spark session"
 
@@ -239,7 +257,7 @@ class SparkCluster:
             .config("spark.dynamicAllocation.initialExecutors", self.__worker_num) \
             .config("spark.executor.instances", self.__worker_num)
 
-        if self.__spark_version.startswith("3."):
+        if self.__spark_major_version() == 3:
             session_builder = session_builder.config("spark.dynamicAllocation.shuffleTracking.enabled", True) \
                 .config("spark.sql.adaptive.enabled", True) \
                 .config("spark.sql.adaptive.coalescePartitions.enabled", True)
@@ -248,11 +266,6 @@ class SparkCluster:
                 session_builder = session_builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
                     .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
                 jars_packages.append("io.delta:delta-core_2.12:0.7.0")
-
-            if self.__aws:
-                # for s3 access
-                jars_packages.append("com.amazonaws:aws-java-sdk-pom:1.11.814")
-                jars_packages.append("org.apache.hadoop:hadoop-aws:2.7.7")
 
         executor_conf = self._gen_executor_conf(self.__worker_type, self.__worker_num, self.__worker_isolation)
         for k, v in executor_conf.items():
@@ -291,6 +304,8 @@ class SparkCluster:
             "spark.kubernetes.executor.limit.cores": cores,
             "spark.kubernetes.executor.label.pod.staroid.com/disk": "ssd",
             "spark.kubernetes.executor.label.pod.staroid.com/instance-type": worker_type,
-            "spark.kubernetes.executor.label.pod.staroid.com/isolation": worker_isolation
+            "spark.kubernetes.executor.label.pod.staroid.com/isolation": worker_isolation,
+            "spark.network.timeout": "600s",
+            "spark.executor.heartbeatInterval": "20s"
         }
         return conf
