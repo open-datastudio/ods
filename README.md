@@ -16,35 +16,73 @@ pip install ods
 
 ## Quick start
 
-### Configuration
+### Initialize
 
-1. [Configure staroid](https://github.com/staroids/staroid-python#configuration)
+1. Login staroid.com and get an [access token](https://staroid.com/settings/accesstokens). And set `STAROID_ACCESS_TOKEN` environment variable. See [here](https://github.com/staroids/staroid-python#configuration) for more detail.
 2. Login staroid.com and create a SKE (Star Kubernetes engine) cluster.
 
 ```python
 import ods
-ods.init(ske="kube-cluster-1") # ske is a name of kubernetes cluster
+# 'ske' is the name of kubernetes cluster created from staroid.com. Alternatively, you can export 'STAROID_SKE' environment variable.
+ods.init(ske="kube-cluster-1")
 ```
 
-### Get Spark cluster
+## Spark
+
+### Create spark session
+Create spark session with default configuration
 
 ```python
-spark = ods.spark("spark-1", worker_num=3).session() # create spark session with 3 initial worker nodes
-
+import ods
+spark = ods.spark("spark-1") # 'spark-1' is name of spark-serverless instance to create.
 df = spark.createDataFrame(....)
 ```
 
-### Get Dask cluster (Coming soon)
+Configurue initial number of worker nodes
 
 ```python
+import ods
+spark = ods.spark("spark-1", worker_num=3).session()
+df = spark.createDataFrame(....)
+```
+
+`detal=True` to automatically download & configure delta lake
+
+```python
+import ods
+spark = ods.spark("spark-delta", delta=True)
+spark.read.format("delta").load(....)
+```
+
+pass `spark_conf` dictionary for additonal configuration
+
+```python
+import ods
+spark = ods.spark(spark_conf = {
+    "spark.hadoop.fs.s3a.access.key": "...",
+    "spark.hadoop.fs.s3a.secret.key" : "..."
+})
+```
+
+Check [tests/test_spark.py](https://github.com/open-datastudio/ods/blob/master/tests/test_spark.py) as well.
+
+## Dask
+
+Coming soon 🚛
+
+```python
+import ods
 cluster = ods.dask("dask-1", worker_num=10)
 
 from dask.distributed import Client
 client = Client(cluster)
 ```
 
-### Get Ray cluster (Coming soon)
+## Ray
+
+Coming soon 🚛
 
 ```python
+import ods
 ods.ray(cluster_name="")
 ```
