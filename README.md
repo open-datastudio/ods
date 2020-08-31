@@ -1,20 +1,31 @@
 <br />
 <center>
-  <img src="https://github.com/open-datastudio/datastudio/raw/master/docs/_static/open-datastudio-logo.png" width="250px"/>
+  <img src="https://github.com/open-datastudio/datastudio/raw/master/docs/_static/open-datastudio-logo.png" width="110px"/>
 </center>
 <br />
 
-# Open data studio python library
+# Open data studio
+
+[Open data studio](https://open-datastudio.io) is managed computing computing service on Staroid cloud. Run your machine learning and large scale data processing workload without managing cluster and servers.
+
+Supported computing frameworks are
+
+ - Apache Spark
+ - Dask (coming soon)
+ - Ray (coming soon)
+
+Let's get started!
 
 
-## Install
+## Quick start
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/open-datastudio/ods/blob/master/notebook/open-data-studio.ipynb)
+
+### Install
 
 ```
 pip install ods
 ```
-
-
-## Quick start
 
 ### Initialize
 
