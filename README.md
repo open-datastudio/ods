@@ -2,11 +2,10 @@
 <center>
   <img src="https://github.com/open-datastudio/datastudio/raw/master/docs/_static/open-datastudio-logo.png" width="110px"/>
 </center>
-<br />
 
 # Open data studio
 
-[Open data studio](https://open-datastudio.io) is managed computing computing service on Staroid cloud. Run your machine learning and large scale data processing workload without managing cluster and servers.
+[Open data studio](https://open-datastudio.io) is a managed computing computing service on Staroid cloud. Run your machine learning and large scale data processing workloads without managing clusters and servers.
 
 Supported computing frameworks are
 
@@ -34,7 +33,8 @@ pip install ods
 
 ```python
 import ods
-# 'ske' is the name of kubernetes cluster created from staroid.com. Alternatively, you can export 'STAROID_SKE' environment variable.
+# 'ske' is the name of kubernetes cluster created from staroid.com.
+# Alternatively, you can export 'STAROID_SKE' environment variable.
 ods.init(ske="kube-cluster-1")
 ```
 
@@ -45,7 +45,7 @@ Create spark session with default configuration
 
 ```python
 import ods
-spark = ods.spark("spark-1") # 'spark-1' is name of spark-serverless instance to create.
+spark = ods.spark("spark-1").session() # 'spark-1' is name of spark-serverless instance to create.
 df = spark.createDataFrame(....)
 ```
 
@@ -61,7 +61,7 @@ df = spark.createDataFrame(....)
 
 ```python
 import ods
-spark = ods.spark("spark-delta", delta=True)
+spark = ods.spark("spark-delta", delta=True).session()
 spark.read.format("delta").load(....)
 ```
 
@@ -72,7 +72,7 @@ import ods
 spark = ods.spark(spark_conf = {
     "spark.hadoop.fs.s3a.access.key": "...",
     "spark.hadoop.fs.s3a.secret.key" : "..."
-})
+}).session()
 ```
 
 Check [tests/test_spark.py](https://github.com/open-datastudio/ods/blob/master/tests/test_spark.py) as well.
