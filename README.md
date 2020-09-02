@@ -41,6 +41,10 @@ ods.init(ske="kube-cluster-1")
 
 ## Spark
 
+Quick start video
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/J43qKJnp_N8/0.jpg)](https://www.youtube.com/watch?v=J43qKJnp_N8)
+
 ### Create spark session
 Create a spark session with the default configuration.
 You don't need to install/configure spark manually.
