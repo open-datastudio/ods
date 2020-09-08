@@ -10,17 +10,12 @@ from kubernetes import client
 SPARK_ARTIFACTS={
     "3.0.0": {
         "image": "opendatastudio/spark-py:v3.0.0-staroid-20200830-01",
-        "dist": "https://downloads.apache.org/spark/spark-3.0.0/spark-3.0.0-bin-hadoop3.2.tgz",
+        "dist": "https://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop3.2.tgz",
         "commit_url": "GITHUB/open-datastudio/spark-serverless:master",
         "jars": {
             "hadoop-aws": "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.2.0/hadoop-aws-3.2.0.jar",
             "aws-java-sdk": "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.563/aws-java-sdk-bundle-1.11.563.jar"
         }
-    },
-    "2.4.6": {
-        "image": "opendatastudio/spark-py:v2.4.6-staroid",
-        "dist": "https://downloads.apache.org/spark/spark-2.4.6/spark-2.4.6-bin-hadoop2.7.tgz",
-        "commit_url": "GITHUB/open-datastudio/spark-serverless:master"
     }
 }
 
