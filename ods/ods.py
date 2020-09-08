@@ -6,7 +6,7 @@ import os, stat, time
 from pathlib import Path
 
 class Ods:
-    def __init__(self, staroid=None, ske=None, cache_dir=None, chisel_path=None):
+    def __init__(self, staroid=None, ske=None, cache_dir=None):
         self.__tunnel_processes = {}
         self.__ske = None
 
@@ -27,8 +27,6 @@ class Ods:
         # configure from args
         if ske != None:
             self.__ske = ske
-
-        self.__chisel_path = chisel_path
 
     def create_or_get_cache_dir(self, module = ""):
         "create (if not exists) or return cache dir path for module"
@@ -127,8 +125,27 @@ def init(ske=None, reinit=True):
         __singleton["instance"] = Ods(ske=ske)
     return __singleton["instance"]
 
-def spark(name, spark_conf=None, chisel_path=None, worker_num=1, worker_type="standard-4", worker_isolation="dedicated", delta=False, aws=True):
+def spark(
+        name,
+        spark_conf=None,
+        spark_version="3.0.1",
+        spark_home=None,
+        worker_num=1,
+        worker_type="standard-4",
+        worker_isolation="dedicated",
+        delta=False,
+        aws=True):
     init(reinit=False)
 
-    cluster = SparkCluster(__singleton["instance"], name, spark_conf=spark_conf, worker_num=worker_num, worker_type=worker_type, worker_isolation=worker_isolation, delta=delta, aws=aws)
+    cluster = SparkCluster(
+        __singleton["instance"],
+        name,
+        spark_conf=spark_conf,
+        spark_version=spark_version,
+        spark_home=spark_home,
+        worker_num=worker_num,
+        worker_type=worker_type,
+        worker_isolation=worker_isolation,
+        delta=delta,
+        aws=aws)
     return cluster

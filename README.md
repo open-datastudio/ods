@@ -27,6 +27,8 @@ Let's get started!
 pip install ods
 ```
 
+Python `3.6`, `3.7`, `3.8` are supported.
+
 ### Initialize
 
 1. Login staroid.com and get an [access token](https://staroid.com/settings/accesstokens). And set the `STAROID_ACCESS_TOKEN` environment variable. See [here](https://github.com/staroids/staroid-python#configuration) for more detail.
@@ -81,6 +83,16 @@ spark = ods.spark(spark_conf = {
 }).session()
 ```
 
+configure spark version
+
+```python
+import ods
+spark = ods.spark(spark_version = "3.0.1").session()
+```
+
+Currently, spark `3.0.1`, `3.0.0` are supported.
+
+
 Check [tests/test_spark.py](https://github.com/open-datastudio/ods/blob/master/tests/test_spark.py) for complete working example.
 
 ## Dask
@@ -103,7 +115,6 @@ Coming soon 🚛
 import ods
 ods.ray(cluster_name="")
 ```
-
 
 ## Get involved
 

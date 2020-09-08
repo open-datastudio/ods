@@ -8,6 +8,15 @@ import requests
 from kubernetes import client
 
 SPARK_ARTIFACTS={
+    "3.0.1": {
+        "image": "opendatastudio/spark-py:v3.0.1-staroid-20200908-01",
+        "dist": "https://archive.apache.org/dist/spark/spark-3.0.1/spark-3.0.1-bin-hadoop3.2.tgz",
+        "commit_url": "GITHUB/open-datastudio/spark-serverless:master",
+        "jars": {
+            "hadoop-aws": "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.2.0/hadoop-aws-3.2.0.jar",
+            "aws-java-sdk": "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.563/aws-java-sdk-bundle-1.11.563.jar"
+        }
+    },
     "3.0.0": {
         "image": "opendatastudio/spark-py:v3.0.0-staroid-20200830-01",
         "dist": "https://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop3.2.tgz",
@@ -31,7 +40,7 @@ class SparkCluster:
         opends,
         cluster_name,
         spark_conf=None,
-        spark_version="3.0.0",
+        spark_version="3.0.1",
         spark_home=None,
         worker_num=1,
         worker_type="standard-4",
