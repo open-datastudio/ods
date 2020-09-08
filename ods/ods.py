@@ -7,7 +7,6 @@ from pathlib import Path
 
 class Ods:
     def __init__(self, staroid=None, ske=None, cache_dir=None):
-        self.__tunnel_processes = {}
         self.__ske = None
 
         if staroid == None:
@@ -55,18 +54,7 @@ class Ods:
         # wait for phase to become RUNNING
         return self.__wait_for_ns_phase(ns_api, ns, "RUNNING", 600)
 
-    def _is_tunnel_running(self, instance_name):
-        if instance_name in self.__tunnel_processes:
-            p = self.__tunnel_processes[instance_name]
-            p.poll()
-            return p.returncode == None
-        else:
-            return False
-
     def _start_tunnel(self, instance_name, tunnels):
-        if self._is_tunnel_running(instance_name):
-            return
-
         cluster = self._staroid.cluster().get(self.__ske)
         if cluster == None:
             raise Exception("Can't get ske cluster")
