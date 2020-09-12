@@ -2,6 +2,8 @@
 import platform
 import os, re, time, sys
 import subprocess
+import socket
+from contextlib import closing
 import wget
 import staroid
 import requests
@@ -98,13 +100,20 @@ class SparkCluster:
         if not os.path.exists("{}/{}".format(download_dir, filename)):
             wget.download(url, download_dir)
 
+    def __find_free_port(self):
+        with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+            s.bind(('localhost', 0))
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            return s.getsockname()[1]
+
     def start(self):
         "Start cluster"
 
         # run previous steps
         self.install()
 
-        local_kube_api_port = 8001
+        local_kube_api_port = self.__find_free_port()
+        self.__local_kube_api_port = local_kube_api_port
         local_kube_api_addr = "http://localhost:{}".format(local_kube_api_port)
 
         # create start namespace
@@ -243,7 +252,7 @@ class SparkCluster:
         jars_packages = []
         session_builder = SparkSession.builder \
             .appName(self.__cluster_name) \
-            .config("spark.master", "k8s://http://localhost:8001") \
+            .config("spark.master", "k8s://http://localhost:{}".format(self.__local_kube_api_port)) \
             .config("spark.kubernetes.namespace", ns.namespace()) \
             .config("spark.kubernetes.container.image", SPARK_ARTIFACTS[self.__spark_version]["image"]) \
             .config("spark.driver.host", "driver-{}".format(self.__cluster_name)) \
