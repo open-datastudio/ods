@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="ods",
-    version="0.0.6",
+    version="0.0.7",
     license='MIT',
     author="Open Data Studio",
     author_email="moon@staroid.com",
