@@ -11,8 +11,8 @@ This repository provides a python client library.
 Currently, the following computing frameworks are supported in the library.
 
  - Apache Spark
- - Dask (coming soon)
  - Ray (coming soon)
+ - Dask (coming soon)
 
 Let's get started!
 
@@ -95,26 +95,20 @@ Currently, spark `3.0.1`, `3.0.0` are supported.
 
 Check [tests/test_spark.py](https://github.com/open-datastudio/ods/blob/master/tests/test_spark.py) for complete working example.
 
-## Dask
-
-Coming soon 🚛
-
-```python
-import ods
-cluster = ods.dask("dask-1", worker_num=10)
-
-from dask.distributed import Client
-client = Client(cluster)
-```
-
 ## Ray
 
 Coming soon 🚛
 
-```python
-import ods
-ods.ray(cluster_name="")
+```bash
+$ ray up example-full.yaml
+$ ray attach example-full.yaml
+$ ray down example-full.yaml
 ```
+
+## Dask
+
+Coming soon 🚛
+
 
 ## Get involved
 
@@ -122,8 +116,3 @@ Open data studio is an open source project. Please give us feedback and feel fre
 
  - Feedbacks, questions - [ods issue tracker](https://github.com/open-datastudio/ods/issues)
  - [Staroid public dev roadmap](https://github.com/staroids/community/projects/1)
-
-
-## Commercial support
-
-[Staroid](https://staroid.com) actively contributes to Open data studio and provides commercial support. Please [contact](https://staroid.com/site/contact).
